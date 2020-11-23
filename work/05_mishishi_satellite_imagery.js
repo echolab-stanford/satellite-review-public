@@ -1,17 +1,17 @@
 //########################################################################################
-//# Written by: Written by Anne Driscoll, Sept 2019
-//# Last edited by: Anne, Sept 2020
-//# Gets imagery from various public satellites for Figure 3 E-G
+// Written by: Written by Anne Driscoll, Sept 2019
+// Last edited by: Anne, Sept 2020
+// Gets imagery from various public satellites for Figure 3 E-G, including various 
+//    constructed indices (NDVI, AVI, BSI, etc)
 //########################################################################################
 
 //file that downloads (to Google Drive) the images from different satellites at 
 // different time points for Figure 4
 
-var bungoma = ee.Geometry.Point([34.561520, 0.563276])
 var eldoret = ee.Geometry.Rectangle([35.235, 0.48, 35.275, 0.52])
-eldoret = ee.Geometry.Rectangle([34.545, 0.545, 34.585, 0.585]) //actually bungoma
-eldoret = ee.Geometry.Rectangle([28.565, -13.02, 28.605, -12.98]) //actually mishishi
-Map.centerObject(eldoret, 14);
+var bungoma = ee.Geometry.Rectangle([34.545, 0.545, 34.585, 0.585]) 
+var mishishi = ee.Geometry.Rectangle([28.565, -13.02, 28.605, -12.98]) //actually mishishi
+Map.centerObject(mishishi, 14);
 
 //FUNCTIONS from https://gis.stackexchange.com/questions/277059/cloud-mask-for-landsat8-on-google-earth-engine
 var cld = require('users/fitoprincipe/geetools:cloud_masks')
@@ -21,7 +21,7 @@ var cld = require('users/fitoprincipe/geetools:cloud_masks')
 
 //nl 
 var nl = ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG") 
-                .filterBounds(eldoret)
+                .filterBounds(mishishi)
                 .sort('CLOUD_COVER', true);
 var nl = nl.first();
 
@@ -32,22 +32,22 @@ var modis = modis.first();
 
 //l5
 var l5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR")
-                .filterBounds(eldoret)
+                .filterBounds(mishishi)
                 .sort('CLOUD_COVER', true);
 var l5 = l5.first();
 
 //s2
 var s2 = ee.ImageCollection("COPERNICUS/S2_SR") 
-                .filterBounds(eldoret)
+                .filterBounds(mishishi)
                 .sort('CLOUDY_PIXEL_PERCENTAGE', true);
 var s2 = s2.first();
 
 var vizParams = {bands: ['avg_rad'], min: 0.2, max: 16, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(nl.clip(eldoret), vizParams, 'nl');
+//Map.addLayer(nl.clip(mishishi), vizParams, 'nl');
 Export.image.toDrive({
   image: nl.visualize(vizParams),
   description: 'NL',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -57,97 +57,97 @@ var vizParams = {bands: ['B3', 'B2', 'B1'], min: -300, max: 3500, gamma: 1.3};
 Export.image.toDrive({
   image: l5.visualize(vizParams),
   description: 'L5',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['VV', 'VH', 'VV'], min: -30, max: 16};
-//Map.addLayer(s1.clip(eldoret), vizParams, "s1");
+//Map.addLayer(s1.clip(mishishi), vizParams, "s1");
 Export.image.toDrive({
   image: s1.visualize(vizParams),
   description: 'S1',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['B4', 'B3', 'B2'], min: 100, max: 3200};
-//Map.addLayer(s2.clip(eldoret), vizParams, "s2");
+//Map.addLayer(s2.clip(mishishi), vizParams, "s2");
 Export.image.toDrive({
   image: s2.visualize(vizParams),
   description: 'S2',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['sur_refl_b01', 'sur_refl_b02'], min: 440, max: 2750};
-//Map.addLayer(modis.clip(eldoret), vizParams, "modis");
+//Map.addLayer(modis.clip(mishishi), vizParams, "modis");
 Export.image.toDrive({
   image: modis.visualize(vizParams),
   description: 'MODIS',
-  region: eldoret,
+  region: mishishi,
   scale: 250, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['B1'], min: 150, max: 1300, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(s2.clip(eldoret), vizParams, "aerosols");
+//Map.addLayer(s2.clip(mishishi), vizParams, "aerosols");
 Export.image.toDrive({
   image: s2.visualize(vizParams),
   description: 'aerosols',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['B8'], min: 220, max: 6000, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(s2.clip(eldoret), vizParams, "nir");
+//Map.addLayer(s2.clip(mishishi), vizParams, "nir");
 Export.image.toDrive({
   image: s2.visualize(vizParams),
   description: 'nir',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['B9'], min: 1200, max: 3800, palette: ['#01025C', '#F0FF00']};
-M//ap.addLayer(s2.clip(eldoret), vizParams, "water vapor");
+M//ap.addLayer(s2.clip(mishishi), vizParams, "water vapor");
 Export.image.toDrive({
   image: s2.visualize(vizParams),
   description: 'vapor',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['B11'], min: 230, max: 6600, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(s2.clip(eldoret), vizParams, "swir");
+//Map.addLayer(s2.clip(mishishi), vizParams, "swir");
 Export.image.toDrive({
   image: s2.visualize(vizParams),
   description: 'swir',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['AOT'], min: 69, max: 74, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(s2.clip(eldoret), vizParams, "aerosol optical thickness");
+//Map.addLayer(s2.clip(mishishi), vizParams, "aerosol optical thickness");
 Export.image.toDrive({
   image: s2.visualize(vizParams),
   description: 'AOT',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['WVP'], min: 640, max: 1750, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(s2.clip(eldoret), vizParams, "water vapor pressure");
+//Map.addLayer(s2.clip(mishishi), vizParams, "water vapor pressure");
 Export.image.toDrive({
   image: s2.visualize(vizParams),
   description: 'WVP',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -201,61 +201,61 @@ var vizParams = {bands: ['NDWI'], min: -.25, max: .6, palette: ['#01025C', '#F0F
 Export.image.toDrive({
   image: ndwi.visualize(vizParams),
   description: 'NDWI',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 var vizParams = {bands: ['SAVI'], min: -0.22, max: 0.5, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(savi.clip(eldoret), vizParams, "savi");
+//Map.addLayer(savi.clip(mishishi), vizParams, "savi");
 Export.image.toDrive({
   image: savi.visualize(vizParams),
   description: 'SAVI',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 
 var vizParams = {bands: ['NDMI'], min: -0.5, max: 0.5, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(ndmi.clip(eldoret), vizParams, "ndmi");
+//Map.addLayer(ndmi.clip(mishishi), vizParams, "ndmi");
 Export.image.toDrive({
   image: ndmi.visualize(vizParams),
   description: 'NDMI',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 
 var vizParams = {bands: ['NDBI'], min: -0.3, max: 0.25, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(ndbi.clip(eldoret), vizParams, "ndbi");
+//Map.addLayer(ndbi.clip(mishishi), vizParams, "ndbi");
 Export.image.toDrive({
   image: ndbi.visualize(vizParams),
   description: 'NDBI',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 
 var vizParams = {bands: ['BSI'], min: -0.44, max: 0.33, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(bsi.clip(eldoret), vizParams, "bsi");
+//Map.addLayer(bsi.clip(mishishi), vizParams, "bsi");
 Export.image.toDrive({
   image: bsi.visualize(vizParams),
   description: 'BSI',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
 
 
 var vizParams = {bands: ['NDVI'], min: .05, max: 0.81, palette: ['#01025C', '#F0FF00']};
-//Map.addLayer(ndvi.clip(eldoret), vizParams, "ndvi");
+//Map.addLayer(ndvi.clip(mishishi), vizParams, "ndvi");
 Export.image.toDrive({
   image: ndvi.visualize(vizParams),
   description: 'NDVI',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -265,7 +265,7 @@ var vizParams = {bands: ['SI'], min: -1006, max: -105, palette: ['#01025C', '#F0
 Export.image.toDrive({
   image: si.visualize(vizParams),
   description: 'SI',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -275,7 +275,7 @@ var vizParams = {bands: ['nd'], min: -0.55, max: -0.18, palette: ['#01025C', '#F
 Export.image.toDrive({
   image: nddi.visualize(vizParams),
   description: 'NDDI',
-  region: eldoret,
+  region: mishishi,
   scale: 250, //this is from modis
   folder: 'review-paper'
 });
@@ -285,7 +285,7 @@ var vizParams = {bands: ['B1'], min: 135, max: 1430, palette: ['#01025C', '#F0FF
 Export.image.toDrive({
   image: s2.visualize(vizParams),
   description: 'aerosol',
-  region: eldoret,
+  region: mishishi,
   scale: 60, //this band is coarser 
   folder: 'review-paper'
 });
@@ -294,7 +294,7 @@ var vizParams = {bands: ['AVI'], min: -2623, max: 1001, palette: ['#01025C', '#F
 Export.image.toDrive({
   image: avi.visualize(vizParams),
   description: 'AVI',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -304,7 +304,7 @@ Export.image.toDrive({
 
 //mask clouds
 var s2 = ee.ImageCollection("COPERNICUS/S2_SR") 
-                .filterBounds(eldoret);
+                .filterBounds(mishishi);
 var cloudBitMask = ee.Number(2).pow(10).int();
 var cirrusBitMask = ee.Number(2).pow(11).int();
 var qa = s2.select('QA60');
@@ -325,11 +325,11 @@ var vizParams = {bands: ['NDVI'], min: .05, max: 0.81, palette: ['#01025C', '#F0
 var ndvi = s2.filterDate('2019-11-01', '2019-11-30').median()
              .normalizedDifference(['B8', 'B4']).rename('NDVI');
 
-Map.addLayer(ndvi.clip(eldoret), vizParams, "NDVI-Nov");
+Map.addLayer(ndvi.clip(mishishi), vizParams, "NDVI-Nov");
 Export.image.toDrive({
   image: ndvi.visualize(vizParams),
   description: 'NDVI-Nov',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -338,11 +338,11 @@ Export.image.toDrive({
 var ndvi = s2.filterDate('2018-11-01', '2018-11-30').median()
              .normalizedDifference(['B8', 'B4']).rename('NDVI');
 
-Map.addLayer(ndvi.clip(eldoret), vizParams, "NDVI-Nov");
+Map.addLayer(ndvi.clip(mishishi), vizParams, "NDVI-Nov");
 Export.image.toDrive({
   image: ndvi.visualize(vizParams),
   description: 'NDVI-Nov',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -350,11 +350,11 @@ Export.image.toDrive({
 //indices in March
 var ndvi = s2.filterDate('2019-02-20', '2019-03-30').median()
              .normalizedDifference(['B8', 'B4']).rename('NDVI');
-Map.addLayer(ndvi.clip(eldoret), vizParams, "NDVI-Mar");
+Map.addLayer(ndvi.clip(mishishi), vizParams, "NDVI-Mar");
 Export.image.toDrive({
   image: ndvi.visualize(vizParams),
   description: 'NDVI-Mar',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -364,11 +364,11 @@ Export.image.toDrive({
 var ndvi = s2.filterDate('2019-05-01', '2019-05-30').median()
              .normalizedDifference(['B8', 'B4']).rename('NDVI');
 
-Map.addLayer(ndvi.clip(eldoret), vizParams, "NDVI-May");
+Map.addLayer(ndvi.clip(mishishi), vizParams, "NDVI-May");
 Export.image.toDrive({
   image: ndvi.visualize(vizParams),
   description: 'NDVI-May',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -377,11 +377,11 @@ Export.image.toDrive({
 var ndvi = s2.filterDate('2019-09-01', '2019-09-30').median()
              .normalizedDifference(['B8', 'B4']).rename('NDVI');
 
-Map.addLayer(ndvi.clip(eldoret), vizParams, "NDVI-Sept");
+Map.addLayer(ndvi.clip(mishishi), vizParams, "NDVI-Sept");
 Export.image.toDrive({
   image: ndvi.visualize(vizParams),
   description: 'NDVI-Sept',
-  region: eldoret,
+  region: mishishi,
   scale: 10, 
   folder: 'review-paper'
 });
@@ -389,7 +389,7 @@ Export.image.toDrive({
 
 
 //testing area
-print(ndvi.clip(eldoret).reduceRegion(ee.Reducer.max(), eldoret));
-//print(nl.reduceRegion(ee.Reducer.mean(), eldoret));
-print(ndvi.clip(eldoret).reduceRegion(ee.Reducer.min(), eldoret));
+print(ndvi.clip(mishishi).reduceRegion(ee.Reducer.max(), mishishi));
+//print(nl.reduceRegion(ee.Reducer.mean(), mishishi));
+print(ndvi.clip(mishishi).reduceRegion(ee.Reducer.min(), mishishi));
 //print(s2)

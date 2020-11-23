@@ -1,7 +1,7 @@
 //########################################################################################
-//# Written by: Adapted from work by Jeff and Sherrie
-//# Last edited by: Anne, Sept 2020
-//# Gets the revisit rates for individual public satellites from GEE. Used for Figure 3
+// Adapted from: work by Jeff and Sherrie
+// Last edited by: Anne, Sept 2020
+// Gets the revisit rates for individual public satellites from GEE. Used for Figure 3
 //########################################################################################
 
 //file that downloads (to Google Drive) how often public satellites
@@ -9,8 +9,6 @@
 
 //must be run 4 times, changing the dhs file to africa and europe, for 
 // both 2010 and 2019
-
-// last edited by Anne Driscoll in Aug 2020
 
 var modis = ee.ImageCollection("MODIS/006/MOD09GA"),
     l7 = ee.ImageCollection("LANDSAT/LE07/C01/T1_SR"),

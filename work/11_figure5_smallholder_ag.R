@@ -1,11 +1,9 @@
 source("00_init.R")
-setwd(data_path)
-
-# make smallholder ag comparison plot
 library(tidyverse)
 library(data.table)
 library(grDevices)
 library(wesanderson)
+setwd(data_path)
 
 ########################################################################################
 # Written by: Marshall Burke

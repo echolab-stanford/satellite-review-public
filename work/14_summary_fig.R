@@ -1,16 +1,14 @@
 source("00_init.R")
-library(tidyverse)
-library(openxlsx)
 setwd(data_path)
 
 ########################################################################################
 # Written by: Marshall Burke, Nov 2020
-# Last edited by: Anne, Nov  2020
+# Last edited by: Anne, Nov 2020
 # Creates a figure showing performance in literature for panel C of summary figure
 ########################################################################################
 
 
-# parameters determining width of mean line and jitter added horizontially to points, and color of poitns
+# parameters for width of mean line and horizontal jitter to points, and color of points
 off=0.3
 sd=0.05
 cex=1  #size of points

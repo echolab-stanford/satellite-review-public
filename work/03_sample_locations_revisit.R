@@ -6,6 +6,7 @@ setwd(data_path)
 setwd("..")
 
 ########################################################################################
+# Written by: Anne, ?
 # Last edited by: Anne, Aug 2020
 # Used to sample 100 locations each from africa and europe, as pulled weighted by 
 #   population from a global population raster. These locations are used to find the 

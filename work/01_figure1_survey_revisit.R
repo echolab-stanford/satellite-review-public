@@ -13,6 +13,12 @@ loadfonts()
 source("00_init.R")
 setwd(data_path)
 
+########################################################################################
+# Written by: Anne, Jun 2020
+# Last edited by: Anne, Nov 2020
+# Creates all panels for Figure 1 
+########################################################################################
+
 #setup
 projection = CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-110+x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m")
 
@@ -109,10 +115,15 @@ surveys$tot = as.numeric(as.character(surveys$tot))
 surveys$iso3 = as.character(surveys$iso3)
 map$id = as.character(map$id)
 
+# normalize territories (eg greenland shows same revisit as denmark)
 map[map$id=="SJM", "id"] = "NOR"
 map[map$id=="GRL", "id"] = "DNK"
 map = merge(map, surveys, by.x="id", by.y="iso3", all=T)
 map = map[order(map$group, map$piece, map$order),]
+
+##############################################################################
+# create first 3 panels (using surveys from wiid)
+##############################################################################
 
 diff = c(-0.1, 3, 6, 9, 27)
 map$cut_diff = cut(map$diff, diff)
@@ -166,7 +177,7 @@ ggplot2::ggsave(paste0(git_path, "/figures/raw/Figure_1c.pdf"), plot=g,  width=2
 
 
 ##############################################################################
-# get the ag census
+# create panels 4-6 using ag census
 ##############################################################################
 
 # read in map and ag and prep
@@ -256,7 +267,7 @@ ggplot2::ggsave(paste0(git_path, "/figures/raw/Figure_1f.pdf"), plot=g,  width=2
 
 
 ##############################################################################
-# get the population census
+# create panels 7-9 using population census
 ##############################################################################
 
 # read in population data 

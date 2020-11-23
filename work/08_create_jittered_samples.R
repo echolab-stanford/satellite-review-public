@@ -6,10 +6,10 @@ setwd(paste0(data_path, "/jitter-impact"))
 # Last edited by: Anne, Sept 2019
 # We want to look at error as a function of additional jitter. To do that we want to 
 #   create models that are trained by additionally jittered data. This file uses 
-#   nightlights data to pull the "true" location of the DHS sample, plus several 
-#   runs of randomly adding even more jitter.
-# This file saves the nightlights data for each DHS point, and then for each DHS point 
-#   randomly jittered 100 times and saves that data under "dhs_features_jitter"
+#   nightlights data to pull the nightlights at the "true" location of the DHS sample, 
+#   plus several runs of randomly adding even more jitter.
+# This file saves the nightlights data for each true DHS point, and then for each DHS 
+#   point randomly jittered 100 times and saves that data under "dhs_features_jitter"
 ########################################################################################
 
 #figures out what ids from a vector would correspond to a square in a matrix

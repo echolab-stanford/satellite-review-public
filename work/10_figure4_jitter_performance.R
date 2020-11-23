@@ -10,7 +10,7 @@ library(boot)
 
 
 #################################################################
-#read in data
+# read in data
 #################################################################
 setwd(data_path)           
 jitter_file = "jitter-impact/dhs_jitter_international_results_linearTRUE_histbins35_6foldsby4_jitters.csv"
@@ -22,7 +22,7 @@ response = read.csv(response_file)
 crop = read.csv("maps2016.dataforrep.csv")
 
 #################################################################
-#calculate mean jitter for each level we add
+# calculate mean jitter for each level we add
 #################################################################
 jitter_calc = function(xy, distance, og=F) {
   
@@ -65,7 +65,7 @@ jitter_means$jitter = jitter_means$jitter + 5
 
 
 #################################################################
-#jitter figure
+# jitter figure
 #################################################################
 
 jitter = merge(jitter, jitter_means, by="jitter")[, 2:8]
@@ -101,7 +101,7 @@ ggsave(paste0(git_path, "/figures/raw/Figure_4a.pdf"), jitter_plot,
          "pdf", width=7.5, height=4, dpi=300)
 
 #################################################################
-#sample figure
+# sample figure
 #################################################################
 
 myColors = c("#1FB24A", "#6F95CE")
