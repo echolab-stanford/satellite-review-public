@@ -4,22 +4,25 @@ setwd(paste0(data_path, "/jitter-impact"))
 ########################################################################################
 # Written by: Anne, July 2019
 # Last edited by: Anne, Sept 2019
+# 
 # We want to look at error as a function of additional jitter. To do that we want to 
 #   create models that are trained by additionally jittered data. This file uses 
 #   nightlights data to pull the nightlights at the "true" location of the DHS sample, 
 #   plus several runs of randomly adding even more jitter.
+#   
 # This file saves the nightlights data for each true DHS point, and then for each DHS 
 #   point randomly jittered 100 times and saves that data under "dhs_features_jitter"
 ########################################################################################
 
 #figures out what ids from a vector would correspond to a square in a matrix
 box_to_vec = function(x, y, box_dim, total_dim) {
+  
   #x and y are the jittered point locations
   #box_dim is how much to take
-  #total_dim is edge length of matrix
+  #total_dim is edge length of the matrix being drawn from
   
   length = total_dim^2
-  x = x %% total_dim
+  x = x %% total_dim #WILL THIS EVER CHANGE X? NO
   
   if (box_dim %% 2 != 0) {
     dir_left = dir_right = (box_dim-1)/2
@@ -37,7 +40,11 @@ box_to_vec = function(x, y, box_dim, total_dim) {
   ids = as.list(rep(NA, length(minx)))
   
   for (i in 1:length(ids)) {
-    cols = (minx[i]:maxx[i]) - 1  #minus 1 bcz you don't add anything to the num in first row
+      
+    # Find the index in a flattened vector (representing a matrix) that hold the bounds of
+    # the values you want to extract. Eg if you want the 3rd to 6th numbers in a matrix 
+    # that has ten values per row you extract values 13-16 in the vector
+    cols = (minx[i]:maxx[i]) - 1  
     rows = (miny[i]:maxy[i])
     cols = cols*total_dim
     id = sapply(rows, FUN=function(x) {x + cols})
@@ -147,13 +154,18 @@ model = function(train, test_jitter, test, linear=T) {
   return(c(true_cor, test_cor, train_cor))
 }
 
+##########################################################################################
+# Read in DHS and nightlights data
+##########################################################################################
+
 #bring in the dhs data and get cluster level index
 dhs = readRDS(paste0(dhs_path, "/output/DHS_output_DHS6_7_2019-03-19.RDS"))
 dhs = dhs[dhs$cname %in% c("ZA", "ET", "MZ", "MW", "EG", "RW", "LS", "ZM", "SL"), ]
 dhs = dhs[complete.cases(dhs[, c(10:15, 18)]), ]
 dhs$index = stata_index(dhs[, c(10:15, 18)])
-dhs$sum = rowSums(dhs[, c(10:15, 18)])
-dhs = aggregate(dhs[, c("index", "sum")], by=dhs[, c("cluster_id", "year", "cname", "urban", "lat", "lon")], FUN=mean)
+dhs = aggregate(dhs[, c("index")], by=dhs[, c("cluster_id", "year", "cname", "urban", 
+                                              "lat", "lon")], FUN=mean)
+names(dhs)[7] = "index"
 dhs$id = paste(dhs$cname, dhs$year, dhs$cluster_id)
 dhs = dhs[complete.cases(dhs),]
 ll = unique(dhs[, c("lon", "lat", "id")])
@@ -163,44 +175,72 @@ ll = unique(dhs[, c("lon", "lat", "id")])
 nl = raster("BlackMarble_2016_Africa.tif")
 vx = velox(nl)
 
-####################################
-#create training data
-####################################
+
+##########################################################################################
+# For each point, take a 70km square from around the point from which to draw 
+#   jittered locations
+##########################################################################################
+
+# Extract squares around each point 70km across, since it doesn't overlap with grid cells
+#   perfectly some will pick up extra lines in one direction. We can't tell which is it 
+#   when we get an extra row or column so we drop those, but keep those that have both
+#   an extra row and extra column
 
 fullboxes = extract_boxes(ll, vx, dhs, km=70) #6 minutes
 fullboxes = fullboxes[order(fullboxes$lat, fullboxes$lon), ] #each row can be different num of col/row
-fullboxes$vals = apply(fullboxes, 1, function(x)  max(which(!is.na(x[9:ncol(fullboxes)])))) #how many vals in each row
+fullboxes$vals = apply(fullboxes, 1, function(x)  sum(!is.na(x[9:ncol(fullboxes)]))) #how many vals in each row
 vals = sort(unique(fullboxes$vals))
 goal_size = sqrt(min(vals))
+
 for (i in 1:length(vals)) {
   if (vals[i] != goal_size^2) {
-    if (vals[i] == goal_size*(goal_size+1)) { #has an extra column or row so we just drop it
+      
+    if (vals[i] == goal_size*(goal_size+1)) { 
+      #has an extra column or row so we just drop it
+      #we don't know which so we can't choose the correct values to keep
       rows = which(fullboxes$vals == vals[i]) 
       fullboxes[rows, 9:ncol(fullboxes)] = NA
-    } else if (vals[i] == (goal_size+1)^2) { #has an extra row and column so we drop a row and col
+    } 
+      else if (vals[i] == (goal_size+1)^2) { 
+        #has an extra row and column so we drop a row and col but keep vals
       rows = which(fullboxes$vals == vals[i]) 
       for (j in rows) {
         temp = matrix(as.numeric(fullboxes[j, 9:(vals[i]+8)]), ncol=goal_size+1, byrow=F)
         fullboxes[j, 9:((goal_size^2)+8)] = temp[1:goal_size, 1:goal_size]
       }
-    } else { #isn't a shape we know, so we drop 
+    } 
+      else if (vals[i] == (goal_size+2)^2) { 
+        #has 2 extra rows and columns so we drop the extras
+        rows = which(fullboxes$vals == vals[i]) 
+        for (j in rows) {
+            temp = matrix(as.numeric(fullboxes[j, 9:(vals[i]+8)]), ncol=goal_size+2, byrow=F)
+            fullboxes[j, 9:((goal_size^2)+8)] = temp[1:goal_size, 1:goal_size]
+        }
+    } 
+      else { #isn't a shape we know, so we drop 
       rows = which(fullboxes$vals == vals[i])
       fullboxes[rows, 9:ncol(fullboxes)] = NA
     }
   }
 }
-fullboxes = fullboxes[, 1:(goal_size^2 +8)]
-fullboxes = fullboxes[complete.cases(fullboxes),]
-extraction = as.matrix(fullboxes[, 9:ncol(fullboxes)])
+
+# now we have a dataframe with the values of the whole large square for each location
+fullboxes = fullboxes[, 1:(goal_size^2+8)] #keep only the columns wanted
+fullboxes = fullboxes[complete.cases(fullboxes),] #drop rows with nothing
+extraction = as.matrix(fullboxes[, 9:ncol(fullboxes)]) #store as matrix 
 ll = unique(fullboxes[, c("lon", "lat", "id")]) # get the lat lon points from the dhs data
 ll = ll[complete.cases(ll),]
 
+
+##########################################################################################
+# For each point, for each jitter level, sample a 7km box around the point 200 times
+##########################################################################################
 
 jitter_levels = c(0:25)
 n = 200
 km_deg = 0.0089982311916
 km = 6.72
-pixels = ceiling(km*2)
+pixels = ceiling(km*2) #since each cell is 0.5 km
 box_size = sqrt(ncol(fullboxes)-8)
 
 for (j in 1:length(jitter_levels)){ #for each level of jitter
@@ -210,23 +250,30 @@ for (j in 1:length(jitter_levels)){ #for each level of jitter
   
   for (k in 1:n) {
     
-    #jitter the lat/lon
-    ll_temp = sample_jitter(nrow(ll), center=round(box_size/2), tol=jitter_levels[j]) #jitter the points
+    #jitter the lat/lon of each point
+    ll_temp = sample_jitter(nrow(ll), center=round(box_size/2), tol=jitter_levels[j]) 
     
-    #get x pixels from around each jittered point
-    ids = box_to_vec(ll_temp$new_lat, ll_temp$new_lon, pixels, box_size) #figure out ids 
+    ######################################### get x pixels from around each jittered point
+    
+    #figure out which ids to pull
+    ids = box_to_vec(ll_temp$new_lat, ll_temp$new_lon, pixels, box_size) 
     ids$row = seq(1:nrow(ids)) #id to which point the boxes are from
     ids = tidyr::gather(ids, "x", "column", 1:(ncol(ids)-1)) #turn to matrix of x,y to query
     ids = as.matrix(ids[, c("row", "column")])
     
-    extract = as.data.frame(matrix(NA, nrow(fullboxes), (pixels^2)+8)) #create empty matrix
-    #populate with dhs stuff
-    extract[, 1:8] = fullboxes[, c("id","cluster_id","year","cname","urban","lat","lon","index")]
+    #create data frame to fill with the extracted area
+    extract = as.data.frame(matrix(NA, nrow(fullboxes), (pixels^2)+9)) #create empty matrix
+    
+    #fill first columns with DHS data
+    extract[, 1:8] = fullboxes[, c("id","cluster_id","year","cname","urban","lat","lon",
+                                   "index")]
     names(extract)[1:8] = c("id","cluster_id","year","cname","urban","lat","lon","index")
+    
     #query extraction with x/y points, and coerce to matrix with correct # rows
     extract[, 9:ncol(extract)] = matrix(extraction[ids], nrow = nrow(extract))
     
-    write.csv(extract, paste0("jittered-dhs/dhs_features_jitter", jitter_levels[j],"_", k, ".csv"), row.names=F) #save
+    write.csv(extract, paste0("jittered-dhs/dhs_features_jitter", jitter_levels[j],"_", k, 
+                              ".csv"), row.names=F) #save
     
     svMisc::progress(k, max.value=n)
     
@@ -240,23 +287,23 @@ for (j in 1:length(jitter_levels)){ #for each level of jitter
 }
 
 
-####################################
-#read in training data, model it and save
-####################################
+##########################################################################################
+# read in training data created above, model it and save
+##########################################################################################
 
 #settings
-linear = T
-bins = 35
-num_splits = 4
-kfolds = T
-  folds = 6
-size = 0.4 #used if kfolds = F
+linear = T # use linear regression? if no, uses RF
+bins = 35 # number of bins for histogram representing NL
+num_splits = 4 # number of times to do a different random split
+kfolds = T # should it use kfolds?
+  folds = 6 # only used if kfolds = T
+size = 0.4 # used if kfolds = F
 
 #load in
 files = list.files("jittered-dhs")  #get list of all the saved jittered spots
 files = files[grepl("r[0-2]*[0-9]_", files)]
 gt = as.data.frame(data.table::fread("jittered-dhs/dhs_features_jitter0_1.csv"))
-gt = cbind(gt[,1:8], get_hist(gt[,9:204], bins))
+gt = cbind(gt[,1:8], get_hist(gt[,9:ncol(gt)], bins))
 countries = as.list(as.character(unique(gt$cname)))
 n = length(files) * length(countries) * num_splits
 if (kfolds) {n = n * folds}
@@ -271,9 +318,10 @@ for (i in 1:length(files)) {
   f = files[i]
   num = gsub("[A-Za-z.]+", "", f)
   num = strsplit(substr(num, 3, nchar(num)), "_")[[1]]
-  jitter = as.numeric(num[1])
-  num = as.numeric(num[2])
-  if (!is.na(jitter)) {if (jitter > 25) {next}} else {next}
+  jitter = as.numeric(num[1]) # how many km of jitter
+  num = as.numeric(num[2]) # which iteration of random displacement is this?
+  
+  if (!is.na(jitter)) {if (jitter > 25) {next}} else {next} # if jitter is NA or >25 skip
   
   #read in the file and convert to bins
   dhs_merge = as.data.frame(data.table::fread(paste0("jittered-dhs/", f)))
@@ -296,7 +344,7 @@ for (i in 1:length(files)) {
         #number of folds runs
         folds_i = caret::createFolds(c_merge$index, folds)
         
-        for (k in 1:length(folds_i)) {
+        for (k in 1:folds) {
           
           #for each fold build a model and save
           
@@ -308,6 +356,7 @@ for (i in 1:length(files)) {
           output[row, ] = c(cor[3], cor[2], cor[1], jitter, num, l, k, as.character(countries[[j]]))
           row = row+1
         }
+        
       } else {
         train = dplyr::sample_frac(c_merge, size=size)
         test_jitter = c_merge[!c_merge$id %in% train$id,]
