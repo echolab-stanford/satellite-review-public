@@ -9,9 +9,10 @@ library(boot)
 ########################################################################################
 
 
-#################################################################
+##########################################################################################
 # read in data
-#################################################################
+##########################################################################################
+
 setwd(data_path)           
 jitter_file = "jitter-impact/dhs_jitter_international_results_linearTRUE_histbins35_6foldsby4_jitters.csv"
 sample_file = "jitter-impact/sample_model.csv"
@@ -21,9 +22,11 @@ sample = read.csv(sample_file)
 response = read.csv(response_file)
 crop = read.csv("maps2016.dataforrep.csv")
 
-#################################################################
-# calculate mean jitter for each level we add
-#################################################################
+##########################################################################################
+# calculate mean jitter for each level we add 
+#   since adding normally distributed distance of jitter doesn't add to existing jitter
+##########################################################################################
+
 jitter_calc = function(xy, distance, og=F) {
   
   n = length(xy$x)
@@ -56,12 +59,13 @@ zero = data.frame(x=rep(0, 1000000), y=rep(0,1000000))
 zero = jitter_calc(zero, 5)
 jitter_means$mean[1] = mean(distance(zero))
 
-for (i in 2:nrow(jitter_means)) {
+for (i in 2:nrow(jitter_means)) { #if you add different amounts of jitter, what is mean
   distance_jittered = jitter_means$jitter[i]
   jitter_means$mean[i] = mean(distance(jitter_calc(zero, distance_jittered)))
 }
 
-jitter_means$jitter = jitter_means$jitter + 5
+#add 5 since the baseline we start with has 5km jitter
+jitter_means$jitter = jitter_means$jitter + 5 
 
 
 #################################################################

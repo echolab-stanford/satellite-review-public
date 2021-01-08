@@ -186,7 +186,8 @@ vx = velox(nl)
 #   when we get an extra row or column so we drop those, but keep those that have both
 #   an extra row and extra column
 
-fullboxes = extract_boxes(ll, vx, dhs, km=70) #6 minutes
+box_size = 70
+fullboxes = extract_boxes(ll, vx, dhs, km=box_size) #6 minutes
 fullboxes = fullboxes[order(fullboxes$lat, fullboxes$lon), ] #each row can be different num of col/row
 fullboxes$vals = apply(fullboxes, 1, function(x)  sum(!is.na(x[9:ncol(fullboxes)]))) #how many vals in each row
 vals = sort(unique(fullboxes$vals))
@@ -209,20 +210,15 @@ for (i in 1:length(vals)) {
         fullboxes[j, 9:((goal_size^2)+8)] = temp[1:goal_size, 1:goal_size]
       }
     } 
-      else if (vals[i] == (goal_size+2)^2) { 
-        #has 2 extra rows and columns so we drop the extras
-        rows = which(fullboxes$vals == vals[i]) 
-        for (j in rows) {
-            temp = matrix(as.numeric(fullboxes[j, 9:(vals[i]+8)]), ncol=goal_size+2, byrow=F)
-            fullboxes[j, 9:((goal_size^2)+8)] = temp[1:goal_size, 1:goal_size]
-        }
-    } 
       else { #isn't a shape we know, so we drop 
       rows = which(fullboxes$vals == vals[i])
       fullboxes[rows, 9:ncol(fullboxes)] = NA
     }
   }
 }
+
+one_xtra_row =  vals[sqrt(vals) != round(sqrt(vals))]
+fullboxes[fullboxes$vals] = extract_boxes(ll, vx, dhs, km=box_size) #6 minutes
 
 # now we have a dataframe with the values of the whole large square for each location
 fullboxes = fullboxes[, 1:(goal_size^2+8)] #keep only the columns wanted

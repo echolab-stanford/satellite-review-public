@@ -8,6 +8,11 @@ setwd(data_path)
 #   metrics for different levels of extra noise.
 ########################################################################################
 
+
+##########################################################################################
+# functions
+##########################################################################################
+
 model = function(train, test, linear=T) {
   
   #train model
@@ -35,6 +40,11 @@ get_hist = function(df, bins = 10) {
   return(z)
 }
 
+
+##########################################################################################
+# Read in DHS data
+##########################################################################################
+
 #bring in the dhs data and get cluster level index
 dhs_data = read.csv("jitter-impact/jittered-dhs/dhs_features_jitter0_1.csv")
 dhs_data = cbind(dhs_data$id, get_hist(dhs_data[9:204], bins=35))
@@ -56,6 +66,11 @@ names(true_villages) = c("id", "n", "true_index")
 
 dhs_agg = dhs %>% group_by(id) %>% summarise(index = mean(index, na.rm=T), n=n())
 dhs_agg = merge(dhs_agg, dhs_data, by="id")
+
+
+##########################################################################################
+# Test model performance when downsampling village size
+##########################################################################################
 
 #using leave group out cv
 maxx = 15
@@ -118,10 +133,9 @@ group_var = total_var - within_var
 perc_var_group = group_var/total_var
 
 
-#################################################################
-# noise from responses
-#################################################################
-
+##########################################################################################
+# Test model performance when random noise is added to the asset wealth index
+##########################################################################################
 
 #using leave group out cv
 maxx = 0.43 # half of the sd of dhs_agg$index
@@ -143,6 +157,8 @@ for (i in seq(0, maxx, length.out=20)) {
         randomized_villages = dhs_agg
         randomized_villages$true_index = randomized_villages$index
         randomized_villages = randomized_villages[,c(1, 2, 39, 3, 4:38)]
+        
+        #adding rnorm(0, i) noise to the index
         randomized_villages$index = randomized_villages$index + rnorm(nrow(dhs_agg), 0, i)
         
         for (k in 1:num_group_out) {
