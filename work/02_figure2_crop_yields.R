@@ -31,3 +31,6 @@ ggplot(pd, aes(lsmsyield, atlyield)) +
     theme_anne(font="sans", size=12)
 ggsave(paste0(git_path,'/figures/raw/Figure_2.pdf'), width=8.8, height=3, 
        useDingbats=F)
+
+#add r^2 in AI
+pd %>% group_by(country) %>% summarise(cor = cor(lsmsyield, atlyield, use="c")^2) 

@@ -14,7 +14,7 @@ setwd("../population")
 
 ########################################################################################
 # Written by: Jenny Xue
-# Last edited by: Anne Driscoll, Aug 2020
+# Last edited by: Anne Driscoll, Feb 2021 for figure proofs
 # Compares several population rasters to each other, at various pixel sizes.
 ########################################################################################
 
@@ -35,9 +35,9 @@ africa = c("Algeria", "Angola", "Benin", "Botswana", "Burkina Faso", "Burundi", 
            "Senegal", "Sierra Leone", "Seychelles", "Somalia", "South Africa", "South Sudan", 
            "Sudan", "Tanzania", "Togo", "Tunisia", "Uganda", "Zambia", "Zimbabwe")
 d = df[df$NAME_0 %in% africa, ]
-cor(d$worldpop, d$landscan, use="c")^2
-cor(d$worldpop, d$ghsl, use="c")^2
-cor(d$ghsl, d$landscan, use="c")^2
+cor_pop_scan = round(cor(df.rmna$worldpop, df.rmna$landscan, use="c")^2, 2)
+cor_pop_ghsl = round(cor(df.rmna$worldpop, df.rmna$ghsl, use="c")^2, 2)
+cor_ghsl_scan = round(cor(df.rmna$ghsl, df.rmna$landscan, use="c")^2, 2)
 
 options(scipen=10000)
 
@@ -53,7 +53,8 @@ ggplot(df.rmna, aes(x=worldpop, y=landscan, fill=log(..count..)) ) +
                                                     10^ceiling(log10(round(exp(x),0))))) +
   theme_anne(font="sans") + xlim(0,200000) + ylim(0,200000) + coord_fixed() +
   xlab("Worldpop Estimate (1000's)") + ylab("Landscan Estimate (1000's)") +
-  annotate(geom="text", x=25000, y=190000, label="R=0.45, p<0.01")
+  annotate(geom="text", x=25000, y=190000, 
+           label=paste0("R^2=", cor_pop_scan, ", p<0.01"))
 ggsave(paste0(git_path, "/figures/raw/Figure_6a.pdf"), limitsize = FALSE)
 
 ggplot(df.rmna, aes(x=ghsl, y=landscan, fill=log(..count..)) ) +
@@ -63,7 +64,8 @@ ggplot(df.rmna, aes(x=ghsl, y=landscan, fill=log(..count..)) ) +
                             10^ceiling(log10(round(exp(x),0))))) +
     theme_anne(font="sans") + xlim(0,200000) + ylim(0,200000) + coord_fixed() +
     xlab("GHSL Estimate (1000's)") + ylab("Landscan Estimate (1000's)") +
-  annotate(geom="text", x=25000, y=190000, label="R=0.33, p<0.01")
+  annotate(geom="text", x=25000, y=190000, 
+           label=paste0("R^2=", cor_ghsl_scan, ", p<0.01"))
 ggsave(paste0(git_path, "/figures/raw/Figure_6b.pdf"), limitsize = FALSE)
 
 ggplot(df.rmna, aes(x=ghsl, y=worldpop, fill=log(..count..))) +
@@ -73,7 +75,8 @@ ggplot(df.rmna, aes(x=ghsl, y=worldpop, fill=log(..count..))) +
                             10^ceiling(log10(round(exp(x),0))))) +
     theme_anne(font="sans") + xlim(0,200000) + ylim(0,200000) + coord_fixed() +
     xlab("GHSL Estimate (1000's)") + ylab("Worldpop Estimate (1000's)") +
-  annotate(geom="text", x=25000, y=190000, label="R=0.45, p<0.01")
+  annotate(geom="text", x=25000, y=190000, 
+           label=paste0("R^2=", cor_pop_ghsl, ", p<0.01"))
 ggsave(paste0(git_path, "/figures/raw/Figure_6c.pdf"), limitsize = FALSE)
 
 
