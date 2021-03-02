@@ -242,7 +242,6 @@ g = ggplot(map, aes(long, lat, group=group)) + # the data
 ggplot2::ggsave(paste0(git_path, "/figures/raw/Figure_1d.pdf"), plot=g, 
                 width=4.75, height=3.325)
 
-
 model = lm(years_since ~ log(gdppc), data=ag[!is.infinite(ag$years_since),])
 r2 = format(round(summary(model)$r.squared, 2), nsmall = 2)
 lab = paste("r^2 =='", r2, "'")
@@ -331,7 +330,6 @@ g = ggplot(map, aes(long, lat, group=group)) + # the data
           text=element_text(size=15,  family="Times New Roman"))
 ggplot2::ggsave(paste0(git_path, "/figures/raw/Figure_1g.pdf"), plot=g, 
                 width=4.75, height=3.325)
-
 
 model = lm(years_since ~ log(gdppc), data=pop[!is.infinite(pop$years_since),])
 r2 = format(round(summary(model)$r.squared, 2), nsmall = 2)
